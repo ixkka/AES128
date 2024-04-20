@@ -293,9 +293,9 @@ public class Decrypt{
     }
     
     public void print3DArray(int[][][] array) {
-        for (int layer = 0; layer < array.length; layer++) {
-            System.out.println("Layer " + layer + ":");
-            for (int[] item : array[layer]) {
+        for (int block = 0; block < array.length; block++) {
+            System.out.println("block " + block + ":");
+            for (int[] item : array[block]) {
                 for (int col = 0; col < item.length; col++) {
                     System.out.printf("%02x ", item[col]);
                 }
@@ -321,7 +321,7 @@ public class Decrypt{
         return hexString.toString();
     }
 
-    public String hexToPlaintext(String hexString, int originalLength) {
+    public String hexToPlaintext(String hexString) {
         StringBuilder plainText = new StringBuilder();
         
         for (int i = 0; i < hexString.length(); i += 2) {
@@ -346,13 +346,6 @@ public class Decrypt{
         } else {
             return plaintext;
         }
-    }
-    
-    public int determineOriginalLength(String ciphertext) {
-        char[] chars = ciphertext.toCharArray();
-        int paddingLength = chars[chars.length - 1];
-        int originalLength = chars.length - paddingLength;
-        return originalLength;
     }
 
 }

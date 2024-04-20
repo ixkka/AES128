@@ -45,7 +45,7 @@ public class AES128 {
                         key = scan.nextLine();
 
                         if (key.length() > 16) {
-                            System.out.println("Key length exceeds 16 characters.");
+                            System.out.println("Key exceeds 16 characters.");
                         } else if (key.isEmpty()) {
                             System.out.println("There is no input.");
                         }
@@ -73,7 +73,7 @@ public class AES128 {
                         key = scan.nextLine();
 
                         if (key.length() > 16) {
-                            System.out.println("Key length exceeds 16 characters.");
+                            System.out.println("Key exceeds 16 characters.");
                         } else if (key.isEmpty()) {
                             System.out.println("There is no input.");
                         }
@@ -82,9 +82,7 @@ public class AES128 {
                     Decrypt decObj = new Decrypt(ciphertext, key);
                     String decrypted = decObj.decrypt(ciphertext, key);
                     System.out.println("\nHexadecimal: " + decrypted);
-
-                    int ogLength = decObj.determineOriginalLength(ciphertext);
-                    String ptext = decObj.hexToPlaintext(decrypted, ogLength);
+                    String ptext = decObj.hexToPlaintext(decrypted);
                     System.out.println("Plaintext: " + ptext);
 
                     break;

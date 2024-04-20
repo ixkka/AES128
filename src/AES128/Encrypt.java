@@ -255,7 +255,7 @@ public class Encrypt {
 
         int[][][] state = createStateArray(paddedPlaintext);
         int[][] keyArray = createKeyArray(paddedKey);
-        printMatrix(keyArray);
+        //printMatrix(keyArray);
 
         addRoundKey(state, keyArray);
 
