@@ -14,31 +14,31 @@ import java.util.Scanner;
 public class AES128 {
     public static void main (String[] args){
         Scanner scan = new Scanner(System.in);
+        int choice;
         String plaintext;
         String ciphertext;
         String key;
         boolean continueProgram = true;
 
         do {
-            System.out.println("\n[1] Encrypt");
+            System.out.println("[1] Encrypt");
             System.out.println("[2] Decrypt");
             System.out.println("[3] Exit");
             System.out.print("Choice: ");
-            int choice = scan.nextInt();
+            choice = scan.nextInt();
             scan.nextLine();
 
             switch (choice) {
                 case 1:
                     do {
-                        System.out.print("\nPlaintext (16 characters max): ");
+                        System.out.print("\nPlaintext: ");
                         plaintext = scan.nextLine();
 
-                        if (plaintext.length() > 16) {
-                            System.out.println("Plaintext length exceeds 16 characters.");
-                        } else if (plaintext.isEmpty()) {
+                        if (plaintext.isEmpty()) {
                             System.out.println("There is no input.");
                         }
-                    } while (plaintext.length() > 16 || plaintext.isEmpty());
+
+                    } while (plaintext.isEmpty());
 
                     do {
                         System.out.print("Key (16 characters max): ");
@@ -59,15 +59,14 @@ public class AES128 {
 
                 case 2:
                     do {
-                        System.out.print("\nCiphertext (32 hexadecimal digits): ");
+                        System.out.print("\nCiphertext (hexadecimal): ");
                         ciphertext = scan.nextLine();
 
-                        if (ciphertext.length() != 32) {
-                            System.out.println("Ciphertext must be exactly 32 hexadecimal digits.");
-                        } else if (ciphertext.isEmpty()) {
+                        if (ciphertext.isEmpty()) {
                             System.out.println("There is no input.");
                         }
-                    } while (ciphertext.length() != 32 || ciphertext.isEmpty());
+                        
+                    } while (ciphertext.isEmpty());
 
                     do {
                         System.out.print("Key (16 characters max): ");
@@ -82,7 +81,7 @@ public class AES128 {
 
                     Decrypt decObj = new Decrypt(ciphertext, key);
                     String decrypted = decObj.decrypt(ciphertext, key);
-                    System.out.println("\nHex: " + decrypted);
+                    System.out.println("\nHexadecimal: " + decrypted);
 
                     int ogLength = decObj.determineOriginalLength(ciphertext);
                     String ptext = decObj.hexToPlaintext(decrypted, ogLength);

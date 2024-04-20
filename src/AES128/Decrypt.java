@@ -1,6 +1,6 @@
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ * Click nbfs:nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs:nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package AES128;
 
@@ -13,6 +13,7 @@ import java.util.Arrays;
 public class Decrypt{
     private final String ciphertext;
     private final String key;
+    private static final int BLOCK_SIZE = 16;
     private static final int KEY_LENGTH = 16;
     private static final int NUM_ROUNDS = 10;
     
@@ -75,15 +76,23 @@ public class Decrypt{
         return paddedKey.toString();
     }
     
-    public int[][] createStateArray(String ciphertext){
-        int[][] state = new int[4][4];
+    public int[][][] createStateArray(String paddedPlaintext) {
+        int length = paddedPlaintext.length();
+        int numBlocks = (int) Math.ceil((double) length / (BLOCK_SIZE * 2));
+        int[][][] state = new int[numBlocks][4][4];
+    
+        for (int block = 0; block < numBlocks; block++) {
+            int startIndex = block * BLOCK_SIZE * 2;
             for (int col = 0; col < 4; col++) {
                 for (int row = 0; row < 4; row++) {
-                    state[row][col] = Integer.parseInt(ciphertext.substring(2 * (col * 4 + row), 2 * (col * 4 + row) + 2), 16);
+                    int index = startIndex + col * 8 + row * 2;
+                    String hexPair = paddedPlaintext.substring(index, index + 2);
+                    state[block][row][col] = Integer.parseInt(hexPair, 16);
                 }
             }
-        //System.out.print("createStateArray\n");
-        //printMatrix(state);
+        }
+        //System.out.println("createStateArray:");
+        //print3DArray(state);
         return state;
     }
     
@@ -99,68 +108,76 @@ public class Decrypt{
         return cipherkey;
     }
     
-    private void addRoundKey(int[][] state, int[][] roundKey) {
-        for (int col = 0; col < 4; col++) {
-            int[] tempState = Arrays.copyOf(state[col], 4);
-            int[] tempKey = Arrays.copyOf(roundKey[col], 4);
-                
-            for (int row = 0; row < 4; row++) {
-                state[col][row] = tempState[row] ^ tempKey[row];
+    private void addRoundKey(int[][][] state, int[][] roundKey) {
+        for (int block = 0; block < state.length; block++) {
+            for (int col = 0; col < 4; col++) {
+                int[] tempState = Arrays.copyOf(state[block][col], 4);
+                int[] tempKey = Arrays.copyOf(roundKey[col], 4);
+    
+                for (int row = 0; row < 4; row++) {
+                    state[block][col][row] = tempState[row] ^ tempKey[row];
+                }
             }
         }
         //System.out.print("addRoundKey\n");
-        //printMatrix(state);
+        //print3DArray(state);
     }
     
-    private static void invSubBytes(int[][] state) {
-        for (int row = 0; row < 4; row++) {
-            for (int col = 0; col < 4; col++) {
-                int value = state[row][col] & 0xFF;
-                state[row][col] = sBoxInv[value / 16][value % 16];
+    private void invSubBytes(int[][][] state) {
+        for (int block = 0; block < state.length; block++) {
+            for (int row = 0; row < 4; row++) {
+                for (int col = 0; col < 4; col++) {
+                    int value = state[block][row][col] & 0xFF;
+                    state[block][row][col] = sBoxInv[value / 16][value % 16];
+                }
             }
         }
         //System.out.print("invSubBytes\n");
-        //printMatrix(state);
+        //print3DArray(state);
     }
     
-    private void invShiftRows(int[][] state) {
-        int temp = state[1][3];
-        state[1][3] = state[1][2];
-        state[1][2] = state[1][1];
-        state[1][1] = state[1][0];
-        state[1][0] = temp;
+    private void invShiftRows(int[][][] state) {
+        for (int block = 0; block < state.length; block++) {
+            int temp = state[block][1][3];
+            state[block][1][3] = state[block][1][2];
+            state[block][1][2] = state[block][1][1];
+            state[block][1][1] = state[block][1][0];
+            state[block][1][0] = temp;
 
-        temp = state[2][0];
-        state[2][0] = state[2][2];
-        state[2][2] = temp;
-        temp = state[2][1];
-        state[2][1] = state[2][3];
-        state[2][3] = temp;
+            temp = state[block][2][0];
+            state[block][2][0] = state[block][2][2];
+            state[block][2][2] = temp;
+            temp = state[block][2][1];
+            state[block][2][1] = state[block][2][3];
+            state[block][2][3] = temp;
 
-        temp = state[3][0];
-        state[3][0] = state[3][1];
-        state[3][1] = state[3][2];
-        state[3][2] = state[3][3];
-        state[3][3] = temp;
+            temp = state[block][3][0];
+            state[block][3][0] = state[block][3][1];
+            state[block][3][1] = state[block][3][2];
+            state[block][3][2] = state[block][3][3];
+            state[block][3][3] = temp;
+        }
         
         //System.out.print("invShiftRows\n");
-        //printMatrix(state);
+        //print3DArray(state);
     }
     
-    private void invMixColumns(int[][] state){
-        int[] temp = new int[4];
-        for (int col = 0; col < 4; col++) {
-            for (int row = 0; row < 4; row++) {
-                temp[row] = state[row][col];
-            }
+    private void invMixColumns(int[][][] state){
+        for (int block = 0; block < state.length; block++) {
+            int[] temp = new int[4];
+            for (int col = 0; col < 4; col++) {
+                for (int row = 0; row < 4; row++) {
+                    temp[row] = state[block][row][col];
+                }
 
-            state[0][col] = gMul(0x0e, temp[0]) ^ gMul(0x0b, temp[1]) ^ gMul(0x0d, temp[2]) ^ gMul(0x09, temp[3]);
-            state[1][col] = gMul(0x09, temp[0]) ^ gMul(0x0e, temp[1]) ^ gMul(0x0b, temp[2]) ^ gMul(0x0d, temp[3]);
-            state[2][col] = gMul(0x0d, temp[0]) ^ gMul(0x09, temp[1]) ^ gMul(0x0e, temp[2]) ^ gMul(0x0b, temp[3]);
-            state[3][col] = gMul(0x0b, temp[0]) ^ gMul(0x0d, temp[1]) ^ gMul(0x09, temp[2]) ^ gMul(0x0e, temp[3]);
+                state[block][0][col] = gMul(0x0e, temp[0]) ^ gMul(0x0b, temp[1]) ^ gMul(0x0d, temp[2]) ^ gMul(0x09, temp[3]);
+                state[block][1][col] = gMul(0x09, temp[0]) ^ gMul(0x0e, temp[1]) ^ gMul(0x0b, temp[2]) ^ gMul(0x0d, temp[3]);
+                state[block][2][col] = gMul(0x0d, temp[0]) ^ gMul(0x09, temp[1]) ^ gMul(0x0e, temp[2]) ^ gMul(0x0b, temp[3]);
+                state[block][3][col] = gMul(0x0b, temp[0]) ^ gMul(0x0d, temp[1]) ^ gMul(0x09, temp[2]) ^ gMul(0x0e, temp[3]);
+            }
         }
         //System.out.print("invMixColumns\n");
-        //printMatrix(state);
+        //print3DArray(state);
     }
     
     private static int gMul(int a, int b) {
@@ -236,7 +253,7 @@ public class Decrypt{
             paddedKey = key;
         }
         
-        int[][] state = createStateArray(ciphertext);
+        int[][][] state = createStateArray(ciphertext);
         int[][] keyArray = createKeyArray(paddedKey);
         
         int[][][] roundKeys = new int[NUM_ROUNDS + 1][4][4];
@@ -245,7 +262,7 @@ public class Decrypt{
             roundKeys[round] = expandKey(roundKeys[round - 1], round-1);
         }
         
-        //System.out.print("roundKeys\n");
+        System.out.print("roundKeys\n");
         //print3DArray(roundKeys);
         
         addRoundKey(state, roundKeys[NUM_ROUNDS]);
@@ -286,17 +303,19 @@ public class Decrypt{
             }
             System.out.println();
         }
-    } */
+    }*/
     
-    public String stateToHex(int[][] state) {
+    public String stateToHex(int[][][] state) {
         StringBuilder hexString = new StringBuilder();
-        for (int col = 0; col < 4; col++) {
-            for (int row = 0; row < 4; row++) {
-                int byteValue = state[row][col];
+        for (int block = 0; block < state.length; block++) {
+            for (int col = 0; col < 4; col++) {
+                for (int row = 0; row < 4; row++) {
+                    int byteValue = state[block][row][col];
 
-                String hex = String.format("%02x", byteValue);
+                    String hex = String.format("%02x", byteValue);
 
-                hexString.append(hex);
+                    hexString.append(hex);
+                }
             }
         }
         return hexString.toString();
@@ -318,13 +337,15 @@ public class Decrypt{
     }
     
     public String removePadding(String plaintext) {
-        char[] chars = plaintext.toCharArray();
-        int paddingLength = chars[chars.length - 1];
+        int paddingLength = plaintext.charAt(plaintext.length() - 1);
 
-        int paddingStartIndex = chars.length - paddingLength;
-        char[] unpaddedChars = Arrays.copyOfRange(chars, 0, paddingStartIndex);
-
-        return new String(unpaddedChars);
+        if (paddingLength > 0 && paddingLength <= BLOCK_SIZE) {
+            int paddingStartIndex = plaintext.length() - paddingLength;
+            String unpaddedText = plaintext.substring(0, paddingStartIndex);
+            return unpaddedText;
+        } else {
+            return plaintext;
+        }
     }
     
     public int determineOriginalLength(String ciphertext) {
