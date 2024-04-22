@@ -4,12 +4,11 @@
  */
 package AES128;
 
+import java.util.Scanner;
 /**
  *
  * @author Cheska
  */
-
-import java.util.Scanner;
 
 public class AES128 {
     public static void main (String[] args){

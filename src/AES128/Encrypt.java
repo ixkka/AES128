@@ -10,17 +10,13 @@ import java.util.Arrays;
  *
  * @author Cheska
  */
+
 public class Encrypt {
     private final String plaintext;
     private final String key;
     private static final int BLOCK_SIZE = 16;
     private static final int KEY_LENGTH = 16;
     private static final int NUM_ROUNDS = 10;
-    
-    public Encrypt(String plaintext, String key){
-        this.plaintext = plaintext;
-        this.key = key;
-    }
     
     private static final int[][] sBox = {
         {0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76},
@@ -44,11 +40,24 @@ public class Encrypt {
     private static final int[] rCon = {
         0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36
     };
+
+    public Encrypt(String plaintext, String key){
+        this.plaintext = plaintext;
+        this.key = key;
+    }
+
+    public String getPlaintext(){
+        return this.plaintext;
+    }
+
+    public String getKey(){
+        return this.key;
+    }
         
     public String addPlaintextPadding(String plaintext) {
         int length = plaintext.length();
         int paddingLength = BLOCK_SIZE - (length % BLOCK_SIZE);       
-        StringBuilder paddedPlaintext = new StringBuilder(plaintext);
+        StringBuilder paddedPlaintext = new StringBuilder(this.plaintext);
         
         for (int i = 0; i < paddingLength; i++) {
             paddedPlaintext.append((char) paddingLength);
@@ -60,7 +69,7 @@ public class Encrypt {
     public String addKeyPadding(String key) {
         int length = key.length();
         int paddingLength = KEY_LENGTH - (length % KEY_LENGTH);
-        StringBuilder paddedKey = new StringBuilder(key);
+        StringBuilder paddedKey = new StringBuilder(this.key);
 
         for (int i = 0; i < paddingLength; i++) {
             paddedKey.append((char) paddingLength);
@@ -95,11 +104,11 @@ public class Encrypt {
             }
         }
         //System.out.print("createKeyArray\n");
-        //printMatrix(cipherkey);
+        //print2DArray(cipherkey);
         return cipherkey;
     }
     
-    private void addRoundKey(int[][][] state, int[][] roundKey) {
+    public void addRoundKey(int[][][] state, int[][] roundKey) {
         for (int block = 0; block < state.length; block++) {
             for (int col = 0; col < 4; col++) {
                 int[] tempState = Arrays.copyOf(state[block][col], 4);
@@ -114,7 +123,7 @@ public class Encrypt {
         //print3DArray(state);
     }
     
-    private void subBytes(int[][][] state) {
+    public void subBytes(int[][][] state) {
         for (int block = 0; block < state.length; block++) {
             for (int row = 0; row < 4; row++) {
                 for (int col = 0; col < 4; col++) {
@@ -127,7 +136,7 @@ public class Encrypt {
         //print3DArray(state);
     }
     
-    private void shiftRows(int[][][] state) {
+    public void shiftRows(int[][][] state) {
         for (int block = 0; block < state.length; block++) {
             int temp = state[block][1][0];
             state[block][1][0] = state[block][1][1];
@@ -153,7 +162,7 @@ public class Encrypt {
         //print3DArray(state);
     }
     
-    private void mixColumns(int[][][] state) {
+    public void mixColumns(int[][][] state) {
         for (int block = 0; block < state.length; block++) {
             int[] temp = new int[4];
             for (int col = 0; col < 4; col++) {
@@ -170,7 +179,7 @@ public class Encrypt {
         //print3DArray(state);
     }
     
-    private int gMul(int a, int b) {
+    public int gMul(int a, int b) {
         int p = 0;
         for (int i = 0; i < 8; i++) {
             if ((b & 1) == 1) {
@@ -186,7 +195,7 @@ public class Encrypt {
         return p & 0xff;
     }
     
-    private int[][] expandKey(int[][] roundKey, int round) {
+    public int[][] expandKey(int[][] roundKey, int round) {
         int temp[] = new int[4];
         int[][] expandedKey = new int[4][4];
         int[] rConArray = new int[] { rCon[round], 0x00, 0x00, 0x00 };
@@ -209,11 +218,11 @@ public class Encrypt {
             }
         }
         //System.out.print("expandKey\n");
-        //printMatrix(expandedKey);
+        //print2DArray(expandedKey);
         return expandedKey;
     }
     
-    private int[] rotWord(int[] word) {
+    public int[] rotWord(int[] word) {
         int temp = word[0];
 
         word[0] = word[1];
@@ -224,7 +233,7 @@ public class Encrypt {
         return word;
     } 
     
-    private int[] subWord(int[] word) {
+    public int[] subWord(int[] word) {
         int[] result = new int[word.length];
         for (int i = 0; i < word.length; i++) {
             int row = (word[i] >> 4) & 0x0F;
@@ -255,7 +264,7 @@ public class Encrypt {
 
         int[][][] state = createStateArray(paddedPlaintext);
         int[][] keyArray = createKeyArray(paddedKey);
-        //printMatrix(keyArray);
+        //print2DArray(keyArray);
 
         addRoundKey(state, keyArray);
 
@@ -281,10 +290,24 @@ public class Encrypt {
         return ciphertext;
     }
 
+    public String convertStatetoHex(int[][][] state) {
+        StringBuilder ciphertext = new StringBuilder();
+        
+        for (int block = 0; block < state.length; block++) {
+            for (int col = 0; col < 4; col++) {
+                for (int row = 0; row < 4; row++) {
+                    ciphertext.append(String.format("%02X", state[block][row][col]));
+                }
+            }
+        }
+
+        return ciphertext.toString();
+    }
+
     /*public void print3DArray(int[][][] array) {
-        for (int layer = 0; layer < array.length; layer++) {
-            System.out.println("Layer " + layer + ":");
-            for (int[] item : array[layer]) {
+        for (int block = 0; block < array.length; block++) {
+            System.out.println("block " + block + ":");
+            for (int[] item : array[block]) {
                 for (int col = 0; col < item.length; col++) {
                     System.out.printf("%02x ", item[col]);
                 }
@@ -292,9 +315,9 @@ public class Encrypt {
             }
             System.out.println();
         }
-    }*/
+    }
 
-    private static void printMatrix(int[][] state) {
+    public static void print2DArray(int[][] state) {
         for (int col = 0; col < 4; col++) {
             for (int row = 0; row < 4; row++) {
                 System.out.printf("%02x ", state[col][row]);
@@ -302,21 +325,6 @@ public class Encrypt {
             System.out.println();
         }
         System.out.println();
-    }
-
-    
-    private String convertStatetoHex(int[][][] state) {
-        StringBuilder ciphertext = new StringBuilder();
-        
-        for (int layer = 0; layer < state.length; layer++) {
-            for (int col = 0; col < 4; col++) {
-                for (int row = 0; row < 4; row++) {
-                    ciphertext.append(String.format("%02X", state[layer][row][col]));
-                }
-            }
-        }
-
-        return ciphertext.toString();
-    }
+    }*/
 
 }

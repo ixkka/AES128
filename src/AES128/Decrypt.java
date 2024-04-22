@@ -10,17 +10,13 @@ import java.util.Arrays;
  *
  * @author Cheska
  */
+
 public class Decrypt{
     private final String ciphertext;
     private final String key;
     private static final int BLOCK_SIZE = 16;
     private static final int KEY_LENGTH = 16;
     private static final int NUM_ROUNDS = 10;
-    
-    public Decrypt(String ciphertext, String key){
-        this.ciphertext = ciphertext;
-        this.key = key;
-    }
     
     private static final int[][] sBox = {
         {0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76},
@@ -63,11 +59,16 @@ public class Decrypt{
     private static final int[] rCon = {
         0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36
     };
+
+    public Decrypt(String ciphertext, String key){
+        this.ciphertext = ciphertext;
+        this.key = key;
+    }
     
     public String addKeyPadding(String key) {
-        int length = key.length();
+        int length = this.key.length();
         int paddingLength = KEY_LENGTH - (length % KEY_LENGTH);
-        StringBuilder paddedKey = new StringBuilder(key);
+        StringBuilder paddedKey = new StringBuilder(this.key);
 
         for (int i = 0; i < paddingLength; i++) {
             paddedKey.append((char) paddingLength);
@@ -76,8 +77,8 @@ public class Decrypt{
         return paddedKey.toString();
     }
     
-    public int[][][] createStateArray(String paddedPlaintext) {
-        int length = paddedPlaintext.length();
+    public int[][][] createStateArray(String ciphertext) {
+        int length = this.ciphertext.length();
         int numBlocks = (int) Math.ceil((double) length / (BLOCK_SIZE * 2));
         int[][][] state = new int[numBlocks][4][4];
     
@@ -86,7 +87,7 @@ public class Decrypt{
             for (int col = 0; col < 4; col++) {
                 for (int row = 0; row < 4; row++) {
                     int index = startIndex + col * 8 + row * 2;
-                    String hexPair = paddedPlaintext.substring(index, index + 2);
+                    String hexPair = this.ciphertext.substring(index, index + 2);
                     state[block][row][col] = Integer.parseInt(hexPair, 16);
                 }
             }
@@ -104,11 +105,11 @@ public class Decrypt{
             }
         }
         //System.out.print("createKeyArray\n");
-        //printMatrix(cipherkey);
+        //print2DArray(cipherkey);
         return cipherkey;
     }
     
-    private void addRoundKey(int[][][] state, int[][] roundKey) {
+    public void addRoundKey(int[][][] state, int[][] roundKey) {
         for (int block = 0; block < state.length; block++) {
             for (int col = 0; col < 4; col++) {
                 int[] tempState = Arrays.copyOf(state[block][col], 4);
@@ -123,7 +124,7 @@ public class Decrypt{
         //print3DArray(state);
     }
     
-    private void invSubBytes(int[][][] state) {
+    public void invSubBytes(int[][][] state) {
         for (int block = 0; block < state.length; block++) {
             for (int row = 0; row < 4; row++) {
                 for (int col = 0; col < 4; col++) {
@@ -136,7 +137,7 @@ public class Decrypt{
         //print3DArray(state);
     }
     
-    private void invShiftRows(int[][][] state) {
+    public void invShiftRows(int[][][] state) {
         for (int block = 0; block < state.length; block++) {
             int temp = state[block][1][3];
             state[block][1][3] = state[block][1][2];
@@ -162,7 +163,7 @@ public class Decrypt{
         //print3DArray(state);
     }
     
-    private void invMixColumns(int[][][] state){
+    public void invMixColumns(int[][][] state){
         for (int block = 0; block < state.length; block++) {
             int[] temp = new int[4];
             for (int col = 0; col < 4; col++) {
@@ -180,7 +181,7 @@ public class Decrypt{
         //print3DArray(state);
     }
     
-    private static int gMul(int a, int b) {
+    public static int gMul(int a, int b) {
         int p = 0;
         for (int i = 0; i < 8; i++) {
             if ((b & 1) == 1) {
@@ -196,7 +197,7 @@ public class Decrypt{
         return p & 0xff;
     }
     
-    private int[][] expandKey(int[][] roundKey, int round) {
+    public int[][] expandKey(int[][] roundKey, int round) {
         int[] temp = new int[4];
         int[][] expandedKey = new int[4][4];
         int[] rConArray = new int[] { rCon[round], 0x00, 0x00, 0x00 };
@@ -221,7 +222,7 @@ public class Decrypt{
         return expandedKey;
      }
     
-    private int[] rotWord(int[] word) {
+    public int[] rotWord(int[] word) {
         int temp = word[0];
 
         word[0] = word[1];
@@ -232,7 +233,7 @@ public class Decrypt{
         return word;
     } 
     
-    private static int[] subWord(int[] word) {
+    public static int[] subWord(int[] word) {
         int[] result = new int[word.length];
         for (int i = 0; i < word.length; i++) {
             int row = (word[i] >> 4) & 0x0F;
@@ -244,25 +245,25 @@ public class Decrypt{
     
     public String decrypt(String ciphertext, String key){
         String paddedKey;
-        int keyLength = key.length();
+        int keyLength = this.key.length();
         
         
         if(keyLength < KEY_LENGTH){
             paddedKey = addKeyPadding(key);
         } else {
-            paddedKey = key;
+            paddedKey = this.key;
         }
         
         int[][][] state = createStateArray(ciphertext);
         int[][] keyArray = createKeyArray(paddedKey);
         
-        int[][][] roundKeys = new int[NUM_ROUNDS + 1][4][4];
+        int[][][] roundKeys = new int[11][4][4];
         roundKeys[0] = keyArray;
         for (int round = 1; round <= NUM_ROUNDS; round++) {
             roundKeys[round] = expandKey(roundKeys[round - 1], round-1);
         }
         
-        System.out.print("roundKeys\n");
+        //System.out.print("roundKeys\n");
         //print3DArray(roundKeys);
         
         addRoundKey(state, roundKeys[NUM_ROUNDS]);
@@ -278,11 +279,54 @@ public class Decrypt{
         invSubBytes(state);
         addRoundKey(state, roundKeys[0]);
 
-        String plaintext = stateToHex(state);
-        return plaintext;
+        String hex = stateToHex(state);
+        return hex;
     }
     
-    /*private static void printMatrix(int[][] state) {
+    public String stateToHex(int[][][] state) {
+        StringBuilder hexString = new StringBuilder();
+        for (int block = 0; block < state.length; block++) {
+            for (int col = 0; col < 4; col++) {
+                for (int row = 0; row < 4; row++) {
+                    int byteValue = state[block][row][col];
+
+                    String hex = String.format("%02x", byteValue);
+
+                    hexString.append(hex);
+                }
+            }
+        }
+        return hexString.toString();
+    }
+
+    public String hexToPlaintext(String hexString) {
+        StringBuilder plaintext = new StringBuilder();
+        
+        for (int i = 0; i < hexString.length(); i += 2) {
+            String hexPair = hexString.substring(i, i + 2);
+            int byteValue = Integer.parseInt(hexPair, 16);
+            plaintext.append((char) byteValue);
+        }
+
+        String plaintextWithPadding = plaintext.toString();
+        String plaintextWithoutPadding = removePadding(plaintextWithPadding);
+
+        return plaintextWithoutPadding;
+    }
+    
+    public String removePadding(String plaintext) {
+        int paddingLength = plaintext.charAt(plaintext.length() - 1);
+
+        if (paddingLength > 0 && paddingLength <= BLOCK_SIZE) {
+            int paddingStartIndex = plaintext.length() - paddingLength;
+            String unpaddedText = plaintext.substring(0, paddingStartIndex);
+            return unpaddedText;
+        } else {
+            return plaintext;
+        }
+    }
+
+    /*public static void print2DArray(int[][] state) {
         for (int col = 0; col < 4; col++) {
             for (int row = 0; row < 4; row++) {
                 System.out.printf("%02x ", state[col][row]);
@@ -304,49 +348,6 @@ public class Decrypt{
             System.out.println();
         }
     }*/
-    
-    public String stateToHex(int[][][] state) {
-        StringBuilder hexString = new StringBuilder();
-        for (int block = 0; block < state.length; block++) {
-            for (int col = 0; col < 4; col++) {
-                for (int row = 0; row < 4; row++) {
-                    int byteValue = state[block][row][col];
-
-                    String hex = String.format("%02x", byteValue);
-
-                    hexString.append(hex);
-                }
-            }
-        }
-        return hexString.toString();
-    }
-
-    public String hexToPlaintext(String hexString) {
-        StringBuilder plainText = new StringBuilder();
-        
-        for (int i = 0; i < hexString.length(); i += 2) {
-            String hexPair = hexString.substring(i, i + 2);
-            int byteValue = Integer.parseInt(hexPair, 16);
-            plainText.append((char) byteValue);
-        }
-
-        String plaintextWithPadding = plainText.toString();
-        String plaintextWithoutPadding = removePadding(plaintextWithPadding);
-
-        return plaintextWithoutPadding;
-    }
-    
-    public String removePadding(String plaintext) {
-        int paddingLength = plaintext.charAt(plaintext.length() - 1);
-
-        if (paddingLength > 0 && paddingLength <= BLOCK_SIZE) {
-            int paddingStartIndex = plaintext.length() - paddingLength;
-            String unpaddedText = plaintext.substring(0, paddingStartIndex);
-            return unpaddedText;
-        } else {
-            return plaintext;
-        }
-    }
 
 }
 
