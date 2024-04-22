@@ -92,7 +92,7 @@ public class AES128 {
                     break;
 
                 default:
-                    System.out.println("Invalid choice. Please try again.");
+                    System.out.println("Invalid choice.");
                     break;
             }
 

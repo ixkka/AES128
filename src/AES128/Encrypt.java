@@ -169,10 +169,10 @@ public class Encrypt {
                 for (int row = 0; row < 4; row++) {
                     temp[row] = state[block][row][col];
                 }
-            state[block][0][col] = gMul(0x02, temp[0]) ^ gMul(0x03, temp[1]) ^ temp[2] ^ temp[3];
-            state[block][1][col] = temp[0] ^ gMul(0x02, temp[1]) ^ gMul(0x03, temp[2]) ^ temp[3];
-            state[block][2][col] = temp[0] ^ temp[1] ^ gMul(0x02, temp[2]) ^ gMul(0x03, temp[3]);
-            state[block][3][col] = gMul(0x03, temp[0]) ^ temp[1] ^ temp[2] ^ gMul(0x02, temp[3]);
+                state[block][0][col] = gMul(0x02, temp[0]) ^ gMul(0x03, temp[1]) ^ temp[2] ^ temp[3];
+                state[block][1][col] = temp[0] ^ gMul(0x02, temp[1]) ^ gMul(0x03, temp[2]) ^ temp[3];
+                state[block][2][col] = temp[0] ^ temp[1] ^ gMul(0x02, temp[2]) ^ gMul(0x03, temp[3]);
+                state[block][3][col] = gMul(0x03, temp[0]) ^ temp[1] ^ temp[2] ^ gMul(0x02, temp[3]);
             }
         }
         //System.out.print("mixColumns\n");

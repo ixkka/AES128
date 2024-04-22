@@ -64,6 +64,14 @@ public class Decrypt{
         this.ciphertext = ciphertext;
         this.key = key;
     }
+
+    public String getCiphertext(){
+        return this.ciphertext;
+    }
+
+    public String getKey(){
+        return this.key;
+    }
     
     public String addKeyPadding(String key) {
         int length = this.key.length();
